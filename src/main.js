@@ -1,7 +1,7 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
-import getImagesByQuery from './js/pixabay-api';
+import { fetchImages } from './js/pixabay-api';
 import {
   createGallery,
   showLoader,
@@ -14,6 +14,7 @@ const loadMoreBtn = document.querySelector('.load-more-btn');
 const loader = document.querySelector('.loader-js');
 
 let currentPage = 1;
+const perPage = 15;
 let currentQuery = '';
 
 form.addEventListener('submit', handleSubmit);
@@ -31,25 +32,49 @@ async function handleSubmit(event) {
   showLoader();
 
   try {
-    const response = await getImagesByQuery(currentQuery, currentPage);
-    const images = response.data.hits;
+    const response = await fetchImages(currentQuery, currentPage);
+    const images = response.hits;
+
     if (images.length === 0) {
       iziToast.warning({
         message: 'На жаль, за вашим запитом нічого не знайдено. Спробуйте інший запит!',
         messageColor: '#ffffff',
+        backgroundColor: '#ef4040',
+        position: 'topRight',
       });
-      loadMoreBtn.style.display = 'none'; 
-      clearGallery()
+      clearGallery();
+      loadMoreBtn.style.display = 'none';
       hideLoader();
       return;
     }
+
+    clearGallery();
     createGallery(images);
-    if (response.data.totalHits > currentPage * 15) {
+
+    if (response.totalHits <= currentPage * perPage) {
+      loadMoreBtn.style.display = 'none';
+      iziToast.info({
+        message: 'На жаль, ви досягли кінця результатів пошуку.',
+        messageColor: '#ffffff',
+        backgroundColor: '#ef4040',
+        position: 'topRight',
+      });
+    } else {
       loadMoreBtn.style.display = 'block';
     }
+
     hideLoader();
   } catch (error) {
-    console.error(error.message);
+    console.error('Error fetching images:', error);
+    loadMoreBtn.style.display = 'none';
+    iziToast.info({
+      message: 'На жаль, сторінки закінчилися.',
+      messageColor: '#ffffff',
+      backgroundColor: '#ef4040',
+      position: 'topRight',
+    });
+    clearGallery();
+    hideLoader();
   }
 }
 
@@ -58,40 +83,60 @@ async function loadMoreImages() {
   showLoader();
 
   try {
-    const response = await getImagesByQuery(currentQuery, currentPage);
-    const images = response.data.hits;
+    const response = await fetchImages(currentQuery, currentPage);
+    const images = response.hits;
+
     if (images.length === 0) {
-      loadMoreBtn.style.display = 'none'; 
+      loadMoreBtn.style.display = 'none';
       iziToast.info({
-        message: "На жаль, ви досягли кінця результатів пошуку.",
+        message: 'На жаль, ви досягли кінця результатів пошуку.',
         messageColor: '#ffffff',
+        backgroundColor: '#ef4040',
+        position: 'topRight',
       });
       hideLoader();
       return;
     }
-    createGallery(images, true); 
-    if (response.data.totalHits <= currentPage * 15) {
+
+    createGallery(images, true);
+    scrollToNewImages(images.length);
+
+    if (response.totalHits <= currentPage * perPage) {
       loadMoreBtn.style.display = 'none';
       iziToast.info({
-        message: "На жаль, ви досягли кінця результатів пошуку.",
+        message: 'На жаль, ви досягли кінця результатів пошуку.',
         messageColor: '#ffffff',
+        backgroundColor: '#ef4040',
+        position: 'topRight',
       });
     }
+
     hideLoader();
-    scrollToNewImages();
   } catch (error) {
-    console.error(error.message);
+    console.error('Error fetching images:', error);
+    loadMoreBtn.style.display = 'none';
+    iziToast.info({
+      message: 'На жаль, сторінки закінчилися.',
+      messageColor: '#ffffff',
+      backgroundColor: '#ef4040',
+      position: 'topRight',
+    });
+    hideLoader();
   }
 }
 
-function scrollToNewImages() {
-  const galleryItems = document.querySelectorAll('.gallery-item');
-  const lastItem = galleryItems[galleryItems.length - 1];
-  if (lastItem) {
-    const { top } = lastItem.getBoundingClientRect();
-    window.scrollBy({
-      top: top - 100,
-      behavior: 'smooth',
-    });
-  }
+function scrollToNewImages(newItemsCount) {
+  const gallery = document.querySelector('.gallery');
+  const galleryItems = gallery.querySelectorAll('.gallery-item');
+  const totalItems = galleryItems.length;
+  const newItems = Array.from(galleryItems).slice(totalItems - newItemsCount);
+
+  if (newItems.length === 0) return;
+
+  const totalHeight = newItems.reduce((sum, item) => sum + item.offsetHeight, 0);
+
+  window.scrollBy({
+    top: totalHeight * 2,
+    behavior: 'smooth',
+  });
 }

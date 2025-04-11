@@ -6,50 +6,80 @@ const loader = document.querySelector('.loader-js');
 const loadMoreBtn = document.querySelector('.load-more-btn');
 
 export function createGallery(images, append = false) {
-  const gallery = document.querySelector('.gallery');
-  if (!append) {
-    gallery.innerHTML = ''; // Очищаємо галерею, якщо не додаємо зображення
+  if (!gallery) {
+    console.error('Елемент галереї не знайдений.');
+    return;
   }
-  gallery.innerHTML += images
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) => `
-        <li class="gallery-item">
-          <a class="item-link" href="${largeImageURL}">
-            <img class="img" src="${webformatURL}" alt="${tags}" />
-            <ul class="statistic-list">
-              <li class="statistic-item">
-                <p class="statistic-text">Likes</p>
-                <p class="statistic-value">${likes}</p>
-              </li>
-              <li class="statistic-item">
-                <p class="statistic-text">Views</p>
-                <p class="statistic-value">${views}</p>
-              </li>
-              <li class="statistic-item">
-                <p class="statistic-text">Comments</p>
-                <p class="statistic-value">${comments}</p>
-              </li>
-              <li class="statistic-item">
-                <p class="statistic-text">Downloads</p>
-                <p class="statistic-value">${downloads}</p>
-              </li>
-            </ul>
-          </a>
-        </li>
-      `
-    )
-    .join('');
 
+  
+  const fragment = document.createDocumentFragment();
 
+  images.forEach(
+    ({
+      webformatURL,
+      largeImageURL,
+      tags,
+      likes,
+      views,
+      comments,
+      downloads,
+    }) => {
+      const item = document.createElement('li');
+      item.classList.add('gallery-item');
 
+      const link = document.createElement('a');
+      link.classList.add('item-link');
+      link.href = largeImageURL;
+
+      const img = document.createElement('img');
+      img.classList.add('img');
+      img.src = webformatURL;
+      img.alt = tags;
+      img.loading = 'lazy';
+
+      const statsList = document.createElement('ul');
+      statsList.classList.add('statistic-list');
+
+      const stats = [
+        { label: 'Likes', value: likes },
+        { label: 'Views', value: views },
+        { label: 'Comments', value: comments },
+        { label: 'Downloads', value: downloads },
+      ];
+
+      stats.forEach(({ label, value }) => {
+        const statItem = document.createElement('li');
+        statItem.classList.add('statistic-item');
+
+        const statText = document.createElement('p');
+        statText.classList.add('statistic-text');
+        statText.textContent = label;
+
+        const statValue = document.createElement('p');
+        statValue.classList.add('statistic-value');
+        statValue.textContent = value;
+
+        statItem.appendChild(statText);
+        statItem.appendChild(statValue);
+        statsList.appendChild(statItem);
+      });
+
+      link.appendChild(img);
+      link.appendChild(statsList);
+      item.appendChild(link);
+      fragment.appendChild(item);
+    }
+  );
+
+ 
+  if (!append) {
+    gallery.innerHTML = '';
+  }
+
+  
+  gallery.appendChild(fragment);
+
+ 
   new SimpleLightbox('.gallery li a', {
     captionsData: 'alt',
     captionDelay: 250,
@@ -57,31 +87,55 @@ export function createGallery(images, append = false) {
 }
 
 export function clearGallery() {
-  gallery.innerHTML = '';
+  if (gallery) {
+    gallery.innerHTML = '';
+  } else {
+    console.error('Елемент галереї не знайдений.');
+  }
 }
 
 export function showLoader() {
-  loader.classList.add('loader');
+  if (loader) {
+    loader.classList.add('loader');
+  } else {
+    console.error('Елемент завантажувача не знайдений.');
+  }
 }
 
 export function hideLoader() {
-  loader.classList.remove('loader');
+  if (loader) {
+    loader.classList.remove('loader');
+  } else {
+    console.error('Елемент завантажувача не знайдений.');
+  }
 }
 
 export function showLoadMoreButton() {
-  loadMoreBtn.classList.remove('hidden');
+  if (loadMoreBtn) {
+    loadMoreBtn.classList.remove('hidden');
+  } else {
+    console.error('Елемент кнопки "Load more" не знайдений.');
+  }
 }
 
 export function hideLoadMoreButton() {
-  loadMoreBtn.classList.add('hidden');
+  if (loadMoreBtn) {
+    loadMoreBtn.classList.add('hidden');
+  } else {
+    console.error('Елемент кнопки "Load more" не знайдений.');
+  }
 }
 
 export function scrollToNewImages() {
-  const firstNewImage = gallery.querySelector('.gallery-item');
-  if (firstNewImage) {
-    window.scrollBy({
-      top: firstNewImage.getBoundingClientRect().height * 2,
-      behavior: 'smooth',
-    });
+  if (gallery) {
+    const firstNewImage = gallery.querySelector('.gallery-item');
+    if (firstNewImage) {
+      window.scrollBy({
+        top: firstNewImage.getBoundingClientRect().height * 2,
+        behavior: 'smooth',
+      });
+    }
+  } else {
+    console.error('Елемент галереї не знайдений.');
   }
 }
