@@ -12,6 +12,7 @@ p {
     display: inline-block;
     box-sizing: border-box;
     animation: rotation 1s linear infinite;
+    
 }
 
 @keyframes rotation {
@@ -26,8 +27,8 @@ p {
 
 
 
-.loader.is-hidden {
-    border-bottom-color: white;
+.loader .is-hidden {
+   display: none;
 }
 
 .load-more-btn {
